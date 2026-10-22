@@ -1,4 +1,4 @@
-# Swift
+# Swift Atelier
 
 문법을 확인하려고 짜 본 코드다. 왜 적었는지는 각 폴더 README에 둔다.
 
