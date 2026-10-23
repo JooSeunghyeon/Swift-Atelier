@@ -4,4 +4,4 @@
 
 ## 목록
 
-올린 코드는 아직 없다.
+- [swift-optional-chaining-lookup](packages/swift-optional-chaining-lookup/README.md): 옵셔널 체이닝으로 중첩된 딕셔너리 값을 안전하게 꺼내는 예제
