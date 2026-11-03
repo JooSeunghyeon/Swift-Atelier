@@ -10,5 +10,9 @@
   {
     "folder": "swift-mutating-protocol-class-conformance-error",
     "summary": "mutating 요구사항 프로토콜을 class가 채택할 때 mutating 키워드가 무시되는지, 컴파일 에러로 나오는지 확인한다."
+  },
+  {
+    "folder": "swift-force-unwrap-nil-crash-location",
+    "summary": "Swift 옵셔널 강제 해제(!)에서 nil을 만났을 때 나오는 Fatal error 메시지의 파일명과 줄 번호를 직접 확인한다."
   }
 ]
