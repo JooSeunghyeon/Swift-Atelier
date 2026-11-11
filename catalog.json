@@ -14,5 +14,9 @@
   {
     "folder": "swift-force-unwrap-nil-crash-location",
     "summary": "Swift 옵셔널 강제 해제(!)에서 nil을 만났을 때 나오는 Fatal error 메시지의 파일명과 줄 번호를 직접 확인한다."
+  },
+  {
+    "folder": "swift-lazy-sequence-repeated-evaluation-count",
+    "summary": "Swift lazy 시퀀스/컬렉션에서 변환 클로저가 언제, 몇 번 호출되는지를 호출 횟수 카운터로 측정해 eager map과 비교한다."
   }
 ]
