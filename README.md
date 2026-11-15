@@ -9,3 +9,4 @@
 - [swift-mutating-protocol-class-conformance-error](packages/swift-mutating-protocol-class-conformance-error/README.md): mutating 요구사항 프로토콜을 class가 채택할 때 mutating 키워드가 무시되는지, 컴파일 에러로 나오는지 확인한다.
 - [swift-force-unwrap-nil-crash-location](packages/swift-force-unwrap-nil-crash-location/README.md): Swift 옵셔널 강제 해제(!)에서 nil을 만났을 때 나오는 Fatal error 메시지의 파일명과 줄 번호를 직접 확인한다.
 - [swift-lazy-sequence-repeated-evaluation-count](packages/swift-lazy-sequence-repeated-evaluation-count/README.md): Swift lazy 시퀀스/컬렉션에서 변환 클로저가 언제, 몇 번 호출되는지를 호출 횟수 카운터로 측정해 eager map과 비교한다.
+- [swift-async-let-sibling-cancellation-on-throw](packages/swift-async-let-sibling-cancellation-on-throw/README.md): async let 형제 태스크 중 하나가 실패할 때 await 순서가 에러 관찰 시점을 결정하고, 미대기 자식이 암묵적으로 취소되는 동작을 확인한다.

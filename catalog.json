@@ -18,5 +18,9 @@
   {
     "folder": "swift-lazy-sequence-repeated-evaluation-count",
     "summary": "Swift lazy 시퀀스/컬렉션에서 변환 클로저가 언제, 몇 번 호출되는지를 호출 횟수 카운터로 측정해 eager map과 비교한다."
+  },
+  {
+    "folder": "swift-async-let-sibling-cancellation-on-throw",
+    "summary": "async let 형제 태스크 중 하나가 실패할 때 await 순서가 에러 관찰 시점을 결정하고, 미대기 자식이 암묵적으로 취소되는 동작을 확인한다."
   }
 ]
