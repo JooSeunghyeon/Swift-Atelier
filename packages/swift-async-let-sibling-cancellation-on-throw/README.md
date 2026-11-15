@@ -75,7 +75,7 @@ Target: x86_64-unknown-linux-gnu
 에러: FastError - fastFailed
 
 시나리오 6: 둘 다 성공
-이벤트 순서: ["fail:throw", "slow:done"]
+이벤트 순서: ["fast:done", "slow:done"]
 경과 시간: 300ms
 결과: ("slow-success", "fast-success")
 
@@ -98,63 +98,72 @@ Target: x86_64-unknown-linux-gnu
 === Swift async let 형제 태스크 실패 시 취소 동작 테스트 ===
 
 테스트 1: 느린 작업 먼저 await (a, b)
-✓ 에러가 발생해야 함
-✓ FastError여야 함 (실제: Optional<Error>)
-✓ fail:throw 이벤트 있어야 함
-✓ slow:done 이벤트 있어야 함 (취소 안 됨)
-✓ caught 이벤트 있어야 함
-✓ fail:throw가 slow:done보다 먼저 기록되어야 함
-✓ slow:done이 caught보다 먼저 기록되어야 함
-✓ 최소 250ms 이상이어야 함 (실제: 300ms)
+PASS: 에러가 발생해야 함
+PASS: FastError여야 함 (실제: Optional<Error>)
+PASS: fail:throw 이벤트 있어야 함
+PASS: slow:done 이벤트 있어야 함 (취소 안 됨)
+PASS: slow:cancelled 이벤트 없어야 함
+PASS: caught 이벤트 있어야 함
+PASS: fail:throw가 slow:done보다 먼저 기록되어야 함
+PASS: slow:done이 caught보다 먼저 기록되어야 함
+PASS: 최소 250ms 이상이어야 함 (실제: 300ms)
 
 테스트 2: 빠른 작업 먼저 await (b)
-✓ 에러가 발생해야 함
-✓ FastError여야 함
-✓ fail:throw 이벤트 있어야 함
-✓ caught 이벤트 있어야 함
-✓ 200ms 미만이어야 함 (실제: 10ms)
+PASS: 에러가 발생해야 함
+PASS: FastError여야 함
+PASS: fail:throw 이벤트 있어야 함
+PASS: slow:cancelled 이벤트 있어야 함 (미대기 a의 암묵적 취소)
+PASS: slow:done 이벤트 없어야 함
+PASS: caught 이벤트 있어야 함
+PASS: 200ms 미만이어야 함 (실제: 10ms)
 
 테스트 3: 한 번도 await하지 않음
-✓ 에러가 없어야 함
-✓ 결과가 있어야 함
-✓ body-end 이벤트 있어야 함
-✓ slow:cancelled 이벤트 있어야 함 (암묵적 취소)
-✓ body-end가 slow:cancelled보다 먼저 기록되어야 함
+PASS: 에러가 없어야 함
+PASS: 결과가 있어야 함
+PASS: body-end 이벤트 있어야 함
+PASS: slow:cancelled 이벤트 있어야 함 (암묵적 취소)
+PASS: body-end가 slow:cancelled보다 먼저 기록되어야 함
 
 테스트 4: 둘 다 throw, 느린 작업 먼저 await
-✓ 에러가 발생해야 함
-✓ SlowError여야 함 (await 순서대로, 실제: Optional<Error>)
-✓ slow:done 이벤트 있어야 함
-✓ fail:throw 이벤트 있어야 함
-✓ 최소 250ms 이상이어야 함 (실제: 300ms)
+PASS: 에러가 발생해야 함
+PASS: SlowError여야 함 (await 순서대로, 실제: Optional<Error>)
+PASS: slow:done 이벤트 있어야 함
+PASS: fail:throw 이벤트 있어야 함
+PASS: fail:throw가 slow:done보다 먼저 기록되어야 함
+PASS: 최소 250ms 이상이어야 함 (실제: 300ms)
 
 테스트 5: 둘 다 throw, 빠른 작업 먼저 await
-✓ 에러가 발생해야 함
-✓ FastError여야 함 (await 순서대로)
-✓ fail:throw 이벤트 있어야 함
-✓ 200ms 미만이어야 함 (실제: 10ms)
+PASS: 에러가 발생해야 함
+PASS: FastError여야 함 (await 순서대로)
+PASS: fail:throw 이벤트 있어야 함
+PASS: slow:cancelled 이벤트 있어야 함
+PASS: slow:done 이벤트 없어야 함
+PASS: 200ms 미만이어야 함 (실제: 10ms)
 
 테스트 6: 둘 다 성공
-✓ 에러가 없어야 함
-✓ 결과가 있어야 함
-✓ slow-success여야 함 (실제: slow-success)
-✓ fast-success여야 함 (실제: fast-success)
-✓ slow:done 이벤트 있어야 함
+PASS: 에러가 없어야 함
+PASS: 결과가 있어야 함
+PASS: slow-success여야 함 (실제: slow-success)
+PASS: fast-success여야 함 (실제: fast-success)
+PASS: slow:done 이벤트 있어야 함
+PASS: fast:done 이벤트 있어야 함
+PASS: fail:throw 이벤트 없어야 함
 
 테스트 7: withThrowingTaskGroup
-✓ 에러가 발생해야 함
-✓ FastError여야 함 (완료 순서)
-✓ fail:throw 이벤트 있어야 함
-✓ slow:cancelled 이벤트 있어야 함 (그룹 취소)
-✓ 200ms 미만이어야 함 (실제: 10ms)
+PASS: 에러가 발생해야 함
+PASS: FastError여야 함 (완료 순서)
+PASS: fail:throw 이벤트 있어야 함
+PASS: slow:cancelled 이벤트 있어야 함 (그룹 취소)
+PASS: slow:done 이벤트 없어야 함
+PASS: 200ms 미만이어야 함 (실제: 10ms)
 
 ===================
-통과: 37
+통과: 46
 실패: 0
 ===================
 ```
 
-테스트를 5회 연속 실행하여 플래키 여부를 확인한 결과, 모든 실행에서 통과: 37, 실패: 0으로 일관된 결과를 보였다.
+테스트를 5회 연속 실행하여 플래키 여부를 확인한 결과, 모든 실행에서 통과: 46, 실패: 0으로 일관된 결과를 보였다.
 
 ### 뮤테이션 테스트 결과
 
@@ -166,15 +175,20 @@ let aResult = try await a
 return (aResult, bResult)
 ```
 
-결과: 테스트 실패 (통과: 33, 실패: 2, exit code: 1)
+결과: 테스트 실패 (통과: 41, 실패: 4, exit code: 1)
 - "slow:done 이벤트 있어야 함" 실패 (slow:cancelled가 기록됨)
+- "slow:cancelled 이벤트 없어야 함" 실패
 - "최소 250ms 이상" 조건 실패 (실제: 10ms)
+- "fail:throw, slow:done, caught 이벤트가 모두 있어야 함" 실패
 
 **뮤테이션 2**: `slowOperation`에서 `CancellationError` catch 블록의 `await log.record("slow:cancelled")` 제거
 
-결과: 테스트 실패 (통과: 34, 실패: 2, exit code: 1)
-- 테스트 3 "slow:cancelled 이벤트 있어야 함" 실패
-- 테스트 7 "slow:cancelled 이벤트 있어야 함" 실패
+결과: 테스트 실패 (통과: 41, 실패: 5, exit code: 1)
+- 테스트 2 "slow:cancelled 이벤트 있어야 함 (미대기 a의 암묵적 취소)" 실패
+- 테스트 3 "slow:cancelled 이벤트 있어야 함 (암묵적 취소)" 실패
+- 테스트 5 "slow:cancelled 이벤트 있어야 함" 실패
+- 테스트 7 "slow:cancelled 이벤트 있어야 함 (그룹 취소)" 실패
+- 테스트 3 "body-end, slow:cancelled 이벤트가 모두 있어야 함" 실패
 
 두 뮤테이션 모두 테스트를 exit code 1로 실패시켜 테스트가 의도한 동작을 올바르게 검증함을 확인했다.
 

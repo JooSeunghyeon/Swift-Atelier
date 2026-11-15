@@ -1,19 +1,14 @@
 import Foundation
 
 actor EventLog {
-    private var events: [(String, UInt64)] = []
+    private var events: [String] = []
     
     func record(_ message: String) {
-        let now = UInt64(ContinuousClock.now.duration(to: .now).components.attoseconds / 1_000_000_000_000_000_000)
-        events.append((message, now))
+        events.append(message)
     }
     
-    func getEvents() -> [(String, UInt64)] {
+    func getEvents() -> [String] {
         return events
-    }
-    
-    func clear() {
-        events.removeAll()
     }
 }
 
@@ -23,10 +18,6 @@ enum SlowError: Error, Equatable {
 
 enum FastError: Error, Equatable {
     case fastFailed
-}
-
-enum AnotherError: Error, Equatable {
-    case anotherFailed
 }
 
 func slowOperation(log: EventLog, shouldThrow: Bool = false) async throws -> String {
@@ -46,11 +37,13 @@ func slowOperation(log: EventLog, shouldThrow: Bool = false) async throws -> Str
 func fastOperation(log: EventLog, shouldThrow: Bool = true) async throws -> String {
     do {
         try await Task.sleep(for: .milliseconds(10))
-        await log.record("fail:throw")
         if shouldThrow {
+            await log.record("fail:throw")
             throw FastError.fastFailed
+        } else {
+            await log.record("fast:done")
+            return "fast-success"
         }
-        return "fast-success"
     } catch is CancellationError {
         await log.record("fast:cancelled")
         throw CancellationError()
@@ -59,9 +52,15 @@ func fastOperation(log: EventLog, shouldThrow: Bool = true) async throws -> Stri
 
 struct ScenarioResult {
     let events: [String]
-    let elapsedMs: UInt64
+    let elapsedMs: Int64
     let error: (any Error)?
     let result: (String, String)?
+}
+
+func milliseconds(_ duration: Duration) -> Int64 {
+    let seconds = duration.components.seconds
+    let attoseconds = duration.components.attoseconds
+    return seconds * 1000 + attoseconds / 1_000_000_000_000_000
 }
 
 func measureScenario(_ name: String, _ block: @Sendable (EventLog) async throws -> (String, String)) async -> ScenarioResult {
@@ -70,15 +69,15 @@ func measureScenario(_ name: String, _ block: @Sendable (EventLog) async throws 
     
     do {
         let result = try await block(log)
-        let elapsed = ContinuousClock.now.duration(to: start)
-        let elapsedMs = UInt64(-elapsed.components.attoseconds / 1_000_000_000_000_000)
-        let events = await log.getEvents().map { $0.0 }
+        let elapsed = start.duration(to: .now)
+        let elapsedMs = milliseconds(elapsed)
+        let events = await log.getEvents()
         return ScenarioResult(events: events, elapsedMs: elapsedMs, error: nil, result: result)
     } catch {
         await log.record("caught")
-        let elapsed = ContinuousClock.now.duration(to: start)
-        let elapsedMs = UInt64(-elapsed.components.attoseconds / 1_000_000_000_000_000)
-        let events = await log.getEvents().map { $0.0 }
+        let elapsed = start.duration(to: .now)
+        let elapsedMs = milliseconds(elapsed)
+        let events = await log.getEvents()
         return ScenarioResult(events: events, elapsedMs: elapsedMs, error: error, result: nil)
     }
 }
