@@ -22,5 +22,9 @@
   {
     "folder": "swift-async-let-sibling-cancellation-on-throw",
     "summary": "async let 형제 태스크 중 하나가 실패할 때 await 순서가 에러 관찰 시점을 결정하고, 미대기 자식이 암묵적으로 취소되는 동작을 확인한다."
+  },
+  {
+    "folder": "swift-task-local-context-propagation",
+    "summary": "Swift TaskLocal 값이 자식·Task{}에는 전파되고 Task.detached·저장된 콜백에서는 끊기는 지점과 명시 캡처 설계를 비교하는 예제"
   }
 ]
