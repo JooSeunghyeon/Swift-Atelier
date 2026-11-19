@@ -111,7 +111,7 @@ struct TaskLocalContextTests {
     
     @Test("재바인딩 래퍼는 등록 시점 값 유지")
     func testContextPreservingHandlerPreservesRegistrationContext() async {
-        let handler = await RequestContext.$requestID.withValue("O") {
+        let handler = RequestContext.$requestID.withValue("O") {
             ContextPreservingHandler {
                 currentContextLog()
             }
@@ -121,21 +121,29 @@ struct TaskLocalContextTests {
         #expect(result == "RequestID: O")
     }
     
-    @Test("재바인딩 래퍼 안에서 throw 해도 바깥 값 복원")
-    func testContextPreservingHandlerRestoresContextOnThrow() async {
-        let handler = await RequestContext.$requestID.withValue("P") {
-            ContextPreservingHandler {
-                currentContextLog()
+    @Test("throwing 래퍼는 에러 전파하며 등록 시점 값 유지하고 바깥 값 복원")
+    func testThrowingContextPreservingHandlerRestoresContextOnThrow() async {
+        let handler = RequestContext.$requestID.withValue("P") {
+            ThrowingContextPreservingHandler {
+                let observedID = currentContextLog()
+                throw HandlerError(observedRequestID: observedID)
             }
         }
         
         let result = await RequestContext.$requestID.withValue("Q") {
-            let inner = try? await handler.executeThrows()
-            let outer = currentContextLog()
-            return (inner: inner, outer: outer)
+            var caughtError: HandlerError?
+            do {
+                _ = try await handler.execute()
+            } catch let error as HandlerError {
+                caughtError = error
+            } catch {
+                // 예상치 못한 에러
+            }
+            let outerLog = currentContextLog()
+            return (error: caughtError, outer: outerLog)
         }
         
-        #expect(result.inner == "RequestID: P")
+        #expect(result.error?.observedRequestID == "RequestID: P")
         #expect(result.outer == "RequestID: Q")
     }
     

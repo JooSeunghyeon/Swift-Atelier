@@ -54,12 +54,32 @@ public struct ContextPreservingHandler: Sendable {
             await handler()
         }
     }
+}
+
+/// throwing 핸들러를 위한 컨텍스트 보존 래퍼
+public struct ThrowingContextPreservingHandler: Sendable {
+    private let savedRequestID: String?
+    private let handler: @Sendable () async throws -> String
     
-    /// 저장된 컨텍스트 안에서 핸들러 실행 (throwing 버전)
-    public func executeThrows() async throws -> String {
+    public init(handler: @escaping @Sendable () async throws -> String) {
+        self.savedRequestID = RequestContext.requestID
+        self.handler = handler
+    }
+    
+    /// 저장된 컨텍스트 안에서 throwing 핸들러 실행
+    public func execute() async throws -> String {
         try await RequestContext.$requestID.withValue(savedRequestID) {
-            await handler()
+            try await handler()
         }
+    }
+}
+
+/// 테스트용 에러: 핸들러가 읽은 requestID를 포함
+public struct HandlerError: Error, Equatable {
+    public let observedRequestID: String
+    
+    public init(observedRequestID: String) {
+        self.observedRequestID = observedRequestID
     }
 }
 
