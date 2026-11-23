@@ -26,5 +26,9 @@
   {
     "folder": "swift-task-local-context-propagation",
     "summary": "Swift TaskLocal 값이 자식·Task{}에는 전파되고 Task.detached·저장된 콜백에서는 끊기는 지점과 명시 캡처 설계를 비교하는 예제"
+  },
+  {
+    "folder": "swift-enum-raw-value-persistence",
+    "summary": "Swift enum rawValue 영속성 호환 테스트: 저장된 Int rawValue가 있는 상태에서 enum에 case를 중간에 끼워 넣을 때 암묵적 Int rawValue는 뒤 case들의 값이 밀려 옛 데이터가 조용히 다른 case로 해석되는 지점과, 명시 Int rawValue·String rawValue·unknown 보존 래퍼 설계를 비교하는 예제"
   }
 ]
