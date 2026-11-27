@@ -98,10 +98,16 @@ print("원본 슬라이스 startIndex: \(comparison.originalStartIndex)")
 print("재기반 배열 startIndex: \(comparison.rebasedStartIndex)")
 print("원소 동일: \(comparison.elementsEqual)")
 print("재기반 배열 count: \(comparison.rebasedCount)")
+if let firstMatch = comparison.firstElementMatches {
+    print("첫 원소 일치: \(firstMatch)")
+}
 checkCondition(comparison.originalStartIndex == 2, "slice startIndex should be 2")
 checkCondition(comparison.rebasedStartIndex == 0, "rebased startIndex should be 0")
 checkCondition(comparison.elementsEqual, "elements should be equal")
 checkCondition(comparison.rebasedCount == 3, "rebased count should be 3")
+if let firstMatch = comparison.firstElementMatches {
+    checkCondition(firstMatch, "first element should match")
+}
 print()
 
 print("8. 빈 슬라이스 (경계 케이스 D)")
@@ -160,7 +166,9 @@ let sliceRetention = observeSliceRetention(totalElements: 100, sliceRange: 10..<
 print("전체 원소 수: \(sliceRetention.totalElements)")
 print("슬라이스 범위: \(sliceRetention.sliceRange)")
 print("원본 배열 해제 후 deinit 횟수: \(sliceRetention.deinitCount)")
+print("슬라이스까지 해제 후 deinit 횟수: \(sliceRetention.deinitCountAfterRelease)")
 checkCondition(sliceRetention.deinitCount == 0, "slice should retain entire buffer, no deinit expected")
+checkCondition(sliceRetention.deinitCountAfterRelease == 100, "all elements should be released after slice is released")
 print()
 
 print("14. 재기반 배열 수명 (독립 버퍼)")
@@ -168,7 +176,9 @@ let rebasedRetention = observeRebasedArrayRetention(totalElements: 100, sliceRan
 print("전체 원소 수: \(rebasedRetention.totalElements)")
 print("슬라이스 범위: \(rebasedRetention.sliceRange)")
 print("원본 배열 해제 후 deinit 횟수: \(rebasedRetention.deinitCount)")
-checkCondition(rebasedRetention.deinitCount >= 85, "rebased array should allow original buffer to release outside elements")
+print("재기반 배열까지 해제 후 deinit 횟수: \(rebasedRetention.deinitCountAfterRelease)")
+checkCondition(rebasedRetention.deinitCount == 95, "rebased array should allow original buffer to release outside elements")
+checkCondition(rebasedRetention.deinitCountAfterRelease == 100, "all elements should be released after rebased array is released")
 print()
 
 print("15. 범위 밖 인덱스 안전 처리 (경계 케이스 D)")

@@ -6,26 +6,36 @@ public struct SliceComparisonResult: Equatable, Sendable {
     public let rebasedStartIndex: Int
     public let rebasedCount: Int
     public let elementsEqual: Bool
+    public let firstElementMatches: Bool?
     
-    public init(originalStartIndex: Int, originalCount: Int, rebasedStartIndex: Int, rebasedCount: Int, elementsEqual: Bool) {
+    public init(originalStartIndex: Int, originalCount: Int, rebasedStartIndex: Int, rebasedCount: Int, elementsEqual: Bool, firstElementMatches: Bool?) {
         self.originalStartIndex = originalStartIndex
         self.originalCount = originalCount
         self.rebasedStartIndex = rebasedStartIndex
         self.rebasedCount = rebasedCount
         self.elementsEqual = elementsEqual
+        self.firstElementMatches = firstElementMatches
     }
 }
 
 public func compareSliceWithRebasedArray<T: Equatable>(_ slice: ArraySlice<T>) -> SliceComparisonResult {
     let rebased = Array(slice)
-    let elementsEqual = Array(slice) == rebased
+    let elementsEqual = slice.elementsEqual(rebased)
+    let firstElementMatches: Bool?
+    
+    if slice.isEmpty {
+        firstElementMatches = nil
+    } else {
+        firstElementMatches = (slice[slice.startIndex] == rebased[rebased.startIndex])
+    }
     
     return SliceComparisonResult(
         originalStartIndex: slice.startIndex,
         originalCount: slice.count,
         rebasedStartIndex: rebased.startIndex,
         rebasedCount: rebased.count,
-        elementsEqual: elementsEqual
+        elementsEqual: elementsEqual,
+        firstElementMatches: firstElementMatches
     )
 }
 

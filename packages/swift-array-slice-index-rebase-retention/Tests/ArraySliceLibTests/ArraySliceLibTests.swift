@@ -36,18 +36,21 @@ struct ArraySliceLibTests {
         #expect(metadata.count == 4)
     }
     
-    @Test("0 기반 접근은 잘못된 원소를 읽음")
-    func testZeroBasedAccessReadsWrongElement() {
+    @Test("0 기반 접근은 조용히 잘못된 원소를 읽음")
+    func testZeroBasedAccessReadsWrongElementSilently() {
         let array = [100, 200, 300, 400, 500, 600]
-        let slice = array[2..<5]
+        let slice = array[1..<4]
         
-        let result = accessSliceUsingZeroBasedIndex(slice, at: 2)
+        let zeroBasedResult = accessSliceUsingZeroBasedIndex(slice, at: 1)
+        let startIndexResult = accessSliceUsingStartIndex(slice, offsetBy: 1)
         
-        switch result {
-        case .success(let value):
-            #expect(value == 300)
-        case .failure:
-            Issue.record("2 접근은 성공해야 함 (슬라이스 첫 원소)")
+        switch (zeroBasedResult, startIndexResult) {
+        case (.success(let zeroValue), .success(let correctValue)):
+            #expect(zeroValue == 200)
+            #expect(correctValue == 300)
+            #expect(zeroValue != correctValue)
+        default:
+            Issue.record("두 접근 모두 성공해야 함")
         }
     }
     
@@ -111,8 +114,8 @@ struct ArraySliceLibTests {
         }
     }
     
-    @Test("0 기반 루프는 잘못된 합계를 계산")
-    func testZeroBasedLoopCalculatesWrongSum() {
+    @Test("0 기반 루프는 시작이 0인 슬라이스에서는 우연히 맞음")
+    func testZeroBasedLoopWorksWhenStartIsZero() {
         let array = [10, 20, 30, 40, 50, 60]
         let slice = array[0..<3]
         
@@ -122,7 +125,22 @@ struct ArraySliceLibTests {
         case .success(let sum):
             #expect(sum == 60)
         case .failure:
-            Issue.record("0 기반 루프는 성공해야 함")
+            Issue.record("startIndex가 0이면 0 기반 루프가 우연히 성공함")
+        }
+    }
+    
+    @Test("0 기반 루프는 startIndex가 0이 아니면 실패")
+    func testZeroBasedLoopFailsWhenStartIsNotZero() {
+        let array = [10, 20, 30, 40, 50, 60]
+        let slice = array[2..<5]
+        
+        let result = sumSliceUsingZeroBasedLoop(slice)
+        
+        switch result {
+        case .success:
+            Issue.record("startIndex가 0이 아니면 0 기반 루프는 실패해야 함")
+        case .failure(let error):
+            #expect(error == .invalidZeroBasedAccess)
         }
     }
     
@@ -166,6 +184,7 @@ struct ArraySliceLibTests {
         #expect(comparison.originalStartIndex == 1)
         #expect(comparison.rebasedStartIndex == 0)
         #expect(comparison.elementsEqual)
+        #expect(comparison.firstElementMatches == true)
     }
     
     @Test("재기반 배열 count는 슬라이스와 동일")
@@ -177,6 +196,17 @@ struct ArraySliceLibTests {
         
         #expect(comparison.originalCount == 3)
         #expect(comparison.rebasedCount == 3)
+        #expect(comparison.firstElementMatches == true)
+    }
+    
+    @Test("빈 슬라이스 재기반 시 firstElementMatches는 nil")
+    func testEmptySliceRebaseFirstElementMatchesIsNil() {
+        let array = [10, 20, 30]
+        let slice = array[2..<2]
+        
+        let comparison = compareSliceWithRebasedArray(slice)
+        
+        #expect(comparison.firstElementMatches == nil)
     }
     
     @Test("슬라이스의 슬라이스는 원본 인덱스 유지")
@@ -224,6 +254,7 @@ struct ArraySliceLibTests {
         #expect(observation.totalElements == 100)
         #expect(observation.sliceRange == 10..<15)
         #expect(observation.deinitCount == 0)
+        #expect(observation.deinitCountAfterRelease == 100)
     }
     
     @Test("슬라이스는 작은 범위도 전체 버퍼 유지")
@@ -232,6 +263,7 @@ struct ArraySliceLibTests {
         
         #expect(observation.totalElements == 1000)
         #expect(observation.deinitCount == 0)
+        #expect(observation.deinitCountAfterRelease == 1000)
     }
     
     @Test("재기반 배열은 독립 버퍼를 가짐")
@@ -240,14 +272,16 @@ struct ArraySliceLibTests {
         
         #expect(observation.totalElements == 100)
         #expect(observation.sliceRange == 10..<15)
-        #expect(observation.deinitCount >= 85)
+        #expect(observation.deinitCount == 95)
+        #expect(observation.deinitCountAfterRelease == 100)
     }
     
     @Test("재기반 배열은 슬라이스 밖 원소를 해제")
     func testRebasedArrayReleasesOutsideElements() {
         let observation = observeRebasedArrayRetention(totalElements: 50, sliceRange: 10..<12)
         
-        #expect(observation.deinitCount >= 48)
+        #expect(observation.deinitCount == 48)
+        #expect(observation.deinitCountAfterRelease == 50)
     }
     
     @Test("슬라이스 prefix도 원본 인덱스 유지")

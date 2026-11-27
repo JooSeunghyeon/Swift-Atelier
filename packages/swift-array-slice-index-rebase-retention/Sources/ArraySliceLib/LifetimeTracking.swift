@@ -43,11 +43,13 @@ public struct LifetimeObservation: Equatable, Sendable {
     public let totalElements: Int
     public let sliceRange: Range<Int>
     public let deinitCount: Int
+    public let deinitCountAfterRelease: Int
     
-    public init(totalElements: Int, sliceRange: Range<Int>, deinitCount: Int) {
+    public init(totalElements: Int, sliceRange: Range<Int>, deinitCount: Int, deinitCountAfterRelease: Int) {
         self.totalElements = totalElements
         self.sliceRange = sliceRange
         self.deinitCount = deinitCount
+        self.deinitCountAfterRelease = deinitCountAfterRelease
     }
 }
 
@@ -68,10 +70,13 @@ public func observeSliceRetention(totalElements: Int, sliceRange: Range<Int>) ->
     withExtendedLifetime(slice) {}
     slice = nil
     
+    let deinitCountAfterRelease = counter.get()
+    
     return LifetimeObservation(
         totalElements: totalElements,
         sliceRange: sliceRange,
-        deinitCount: deinitCountAfterArrayDropped
+        deinitCount: deinitCountAfterArrayDropped,
+        deinitCountAfterRelease: deinitCountAfterRelease
     )
 }
 
@@ -93,9 +98,12 @@ public func observeRebasedArrayRetention(totalElements: Int, sliceRange: Range<I
     withExtendedLifetime(rebasedArray) {}
     rebasedArray = nil
     
+    let deinitCountAfterRelease = counter.get()
+    
     return LifetimeObservation(
         totalElements: totalElements,
         sliceRange: sliceRange,
-        deinitCount: deinitCountAfterArrayDropped
+        deinitCount: deinitCountAfterArrayDropped,
+        deinitCountAfterRelease: deinitCountAfterRelease
     )
 }

@@ -42,9 +42,9 @@ largeArray = []  // 변수는 비웠지만
 
 | 방법 | 인덱스 안전성 | 버퍼 독립성 | 비용 | 비고 |
 |------|---------------|-------------|------|------|
-| **A. 0 기반 접근** | ❌ 위험 | - | 없음 | 잘못된 원소 읽기, 런타임 트랩 |
-| **B. startIndex/indices 사용** | ✅ 안전 | ❌ 버퍼 공유 | 없음 | 올바른 원소 접근, 버퍼는 여전히 공유 |
-| **C. Array(slice) 재기반** | ✅ 안전 | ✅ 독립 버퍼 | O(n) 복사 | 0부터 시작, 독립 버퍼 |
+| **A. 0 기반 접근** | 위험 | - | 없음 | 잘못된 원소 읽기, 런타임 트랩 |
+| **B. startIndex/indices 사용** | 안전 | 버퍼 공유 | 없음 | 올바른 원소 접근, 버퍼는 여전히 공유 |
+| **C. Array(slice) 재기반** | 안전 | 독립 버퍼 | O(n) 복사 | 0부터 시작, 독립 버퍼 |
 
 ## 구조
 
@@ -123,17 +123,17 @@ swift run ArraySliceDemo
 **환경:** Swift 6.0.3 (Linux Ubuntu 24.04, x86_64)
 
 ```
-✔ Test run with 27 tests passed after 0.001 seconds.
+✔ Test run with 29 tests passed after 0.001 seconds.
 ```
 
 모든 테스트 통과 확인:
 - 인덱스 메타데이터 테스트 (5개)
-- 0 기반 vs startIndex 기반 접근 (5개)
-- 루프 순회 방식 (3개)
-- 재기반 배열 비교 (2개)
+- 0 기반 vs startIndex 기반 접근 (5개, 추가: 조용히 잘못된 원소)
+- 루프 순회 방식 (4개, 추가: startIndex가 0이 아닐 때 실패)
+- 재기반 배열 비교 (3개, 추가: 빈 슬라이스 firstElementMatches=nil)
 - 슬라이스의 슬라이스 (1개)
 - copy-on-write 및 startIndex 변화 (3개)
-- 버퍼 수명 관찰 (4개)
+- 버퍼 수명 관찰 (4개, 정확한 == 검증 및 deinitCountAfterRelease 추가)
 - prefix/suffix 및 범위 검사 (4개)
 
 ## Demo 실제 출력
@@ -173,6 +173,7 @@ slice.enumerated()로 합계: 1200
 재기반 배열 startIndex: 0
 원소 동일: true
 재기반 배열 count: 3
+첫 원소 일치: true
 
 8. 빈 슬라이스 (경계 케이스 D)
 빈 슬라이스: array[3..<3]
@@ -203,11 +204,13 @@ dropFirst 후 startIndex: 3
 전체 원소 수: 100
 슬라이스 범위: 10..<15
 원본 배열 해제 후 deinit 횟수: 0
+슬라이스까지 해제 후 deinit 횟수: 100
 
 14. 재기반 배열 수명 (독립 버퍼)
 전체 원소 수: 100
 슬라이스 범위: 10..<15
 원본 배열 해제 후 deinit 횟수: 95
+재기반 배열까지 해제 후 deinit 횟수: 100
 
 15. 범위 밖 인덱스 안전 처리 (경계 케이스 D)
 offsetBy: 10 (범위 밖) 접근:
@@ -220,7 +223,7 @@ ALL_CHECKS_PASSED
 
 ### A. 0 기반 접근 (실패 설계)
 
-❌ **위험**: 슬라이스의 startIndex가 0이 아닐 때, `slice[0]`은 범위 밖 접근으로 런타임 트랩을 발생시키거나, 슬라이스가 0을 포함하는 경우 원본 배열의 0번 인덱스를 읽어 잘못된 원소를 반환한다.
+**위험**: 슬라이스의 startIndex가 0이 아닐 때, `slice[0]`은 범위 밖 접근으로 런타임 트랩을 발생시키거나, 슬라이스가 0을 포함하는 경우 원본 배열의 0번 인덱스를 읽어 잘못된 원소를 반환한다.
 
 ```swift
 let slice = array[2..<5]  // indices: 2, 3, 4
@@ -237,7 +240,7 @@ slice2[0]  // array[0]을 읽음 (우연히 올바른 원소이지만 위험)
 
 ### B. startIndex/indices 기반 접근 (안전)
 
-✅ **안전**: 슬라이스의 실제 인덱스 범위를 사용한다.
+**안전**: 슬라이스의 실제 인덱스 범위를 사용한다.
 
 ```swift
 // 방법 1: startIndex + offsetBy
@@ -258,7 +261,7 @@ for (_, element) in slice.enumerated() {
 
 ### C. Array(slice) 재기반 (독립 버퍼)
 
-✅ **안전 + 독립**: 슬라이스를 `Array(slice)`로 복사하면 startIndex가 0이 되고 독립 버퍼를 갖는다.
+**안전 + 독립**: 슬라이스를 `Array(slice)`로 복사하면 startIndex가 0이 되고 독립 버퍼를 갖는다.
 
 ```swift
 let slice = array[10..<15]  // startIndex = 10
@@ -308,7 +311,7 @@ let rebased = Array(slice)  // startIndex = 0
 
 1. **절대 하지 말 것**: 슬라이스를 0 기반으로 가정하지 않는다.
    ```swift
-   // ❌ 잘못됨
+   // 잘못됨
    for i in 0..<slice.count {
        let element = slice[i]  // 위험
    }
@@ -316,17 +319,17 @@ let rebased = Array(slice)  // startIndex = 0
 
 2. **해야 할 것**: indices, enumerated, startIndex + offsetBy 사용
    ```swift
-   // ✅ 올바름
+   // 올바름
    for index in slice.indices {
        let element = slice[index]
    }
    
-   // ✅ 올바름
+   // 올바름
    for (offset, element) in slice.enumerated() {
        // offset은 0부터, element는 슬라이스 원소
    }
    
-   // ✅ 올바름
+   // 올바름
    let first = slice[slice.index(slice.startIndex, offsetBy: 0)]
    ```
 
@@ -341,8 +344,8 @@ let rebased = Array(slice)  // startIndex = 0
 2. **장기 보관**: Array(slice)로 재기반한다.
    ```swift
    class Cache {
-       var items: [Item] = []  // ✅
-       // var items: ArraySlice<Item> = []  // ❌ 버퍼 공유
+       var items: [Item] = []  // 올바름
+       // var items: ArraySlice<Item> = []  // 버퍼 공유로 위험
        
        func store(_ slice: ArraySlice<Item>) {
            items = Array(slice)  // 독립 버퍼
@@ -368,9 +371,9 @@ let rebased = Array(slice)  // startIndex = 0
 ### 측정하지 않은 것
 
 - 시간 복잡도 측정 (벤치마크 없음)
-- reserveCapacity/용량 증가 (별도 패키지에서 다룸)
-- Substring/String 슬라이스 (별도 패키지에서 다룸)
-- 커스텀 copy-on-write 구현 (별도 패키지에서 다룸)
+- reserveCapacity/용량 증가 (이 패키지에서 다루지 않음)
+- Substring/String 슬라이스 (이 패키지에서 다루지 않음)
+- 커스텀 copy-on-write 구현 (이 패키지에서 다루지 않음)
 
 ## 결론
 
